@@ -13,7 +13,8 @@ class SignUpController: UIViewController, UINavigationControllerDelegate {
 
     private let plusPhotoButton: UIButton = {
         let button = UIButton(type: .system)
-        button.setImage(#imageLiteral(resourceName: "plus_photo").withRenderingMode(.alwaysOriginal), for: .normal)
+        button.setImage(#imageLiteral(resourceName: "plus_photo").withRenderingMode(.alwaysTemplate), for: .normal)
+        button.tintColor = UIColor.mainBlue
         button.layer.masksToBounds = true
         button.imageView?.contentMode = .scaleAspectFill
         button.addTarget(self, action: #selector(handlePlusPhoto), for: .touchUpInside)
@@ -190,7 +191,7 @@ let info = convertFromUIImagePickerControllerInfoKeyDictionary(info)
             plusPhotoButton.setImage(originalImage.withRenderingMode(.alwaysOriginal), for: .normal)
             profileImage = originalImage
         }
-        plusPhotoButton.layer.borderColor = UIColor(white: 0, alpha: 0.2).cgColor
+        plusPhotoButton.layer.borderColor = UIColor.mainBlue.cgColor
         plusPhotoButton.layer.borderWidth = 0.5
         dismiss(animated: true, completion: nil)
     }
