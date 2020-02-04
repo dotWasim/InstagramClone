@@ -11,7 +11,7 @@ import Firebase
 
 class CommentsController: UICollectionViewController {
     
-    var post: Post? {
+    var postId: String! {
         didSet {
             fetchComments()
         }
@@ -33,7 +33,6 @@ class CommentsController: UICollectionViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         navigationItem.title = "Comments"
-        navigationItem.rightBarButtonItem = UIBarButtonItem(image: #imageLiteral(resourceName: "send2").withRenderingMode(.alwaysOriginal), style: .plain, target: nil, action: nil)
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
         navigationItem.backBarButtonItem?.tintColor = .black
         
@@ -58,7 +57,7 @@ class CommentsController: UICollectionViewController {
     }
     
     @objc private func fetchComments() {
-        guard let postId = post?.id else { return }
+        guard let postId = postId else { return }
         collectionView?.refreshControl?.beginRefreshing()
         Database.database().fetchCommentsForPost(withId: postId, completion: { (comments) in
             self.comments = comments
@@ -106,7 +105,7 @@ extension CommentsController: UICollectionViewDelegateFlowLayout {
 
 extension CommentsController: CommentInputAccessoryViewDelegate {
     func didSubmit(comment: String) {
-        guard let postId = post?.id else { return }
+        guard let postId = postId else { return }
         Database.database().addCommentToPost(withId: postId, text: comment) { (err) in
             if err != nil {
                 return
@@ -120,6 +119,26 @@ extension CommentsController: CommentInputAccessoryViewDelegate {
 //MARK: - CommentCellDelegate
 
 extension CommentsController: CommentCellDelegate {
+    func didTapOptions(comment: Comment) {
+        
+        let actionSheet = UIAlertController(title: "Options", message: nil, preferredStyle: .actionSheet)
+        let action = UIAlertAction(title: "Delete", style: .destructive) { (_) in
+            Database.database().deleteComment(postId: self.postId, commentId: comment.uid) { (error) in
+                DispatchQueue.main.async {
+                    guard let index = self.comments.firstIndex(where: { $0.uid == comment.uid}) else { return }
+                    self.comments.remove(at: index)
+                    self.collectionView.deleteItems(at: [IndexPath(row: index, section: 0)])
+                }
+            }
+        }
+        
+        let cancel = UIAlertAction(title: "Cancel", style: .cancel, handler: nil)
+        
+        actionSheet.addAction(action)
+        actionSheet.addAction(cancel)
+        present(actionSheet, animated: true, completion: nil)
+    }
+    
     func didTapUser(user: User) {
         let userProfileController = UserProfileController(collectionViewLayout: UICollectionViewFlowLayout())
         userProfileController.user = user

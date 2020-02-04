@@ -9,11 +9,25 @@
 import UIKit
 import Firebase
 
-class UserProfileController: HomePostCellViewController {
+class UserProfileController: ProfilePostCellViewController {
     
     var user: User? {
         didSet {
             configureUser()
+        }
+    }
+    
+    lazy var refreshController = UIActivityIndicatorView(style: .whiteLarge)
+    private var finishUpdatingUserProfile = true {
+        didSet {
+            if !self.finishUpdatingUserProfile {
+                refreshController.center = header!.profileImageView.center
+                refreshController.startAnimating()
+                view.addSubview(refreshController)
+            }else{
+                refreshController.stopAnimating()
+                refreshController.removeFromSuperview()
+            }
         }
     }
     
@@ -58,15 +72,13 @@ class UserProfileController: HomePostCellViewController {
                 try Auth.auth().signOut()
                 let loginController = LoginController()
                 let navController = UINavigationController(rootViewController: loginController)
+                navController.modalPresentationStyle = .fullScreen
                 self.present(navController, animated: true, completion: nil)
             } catch let err {
                 print("Failed to sign out:", err)
             }
         }
         alertController.addAction(logOutAction)
-        
-        let deleteAccountAction = UIAlertAction(title: "Delete Account", style: .destructive, handler: nil)
-        alertController.addAction(deleteAccountAction)
     }
     
     private func configureUser() {
@@ -92,13 +104,10 @@ class UserProfileController: HomePostCellViewController {
     
     @objc private func handleRefresh() {
         guard let uid = user?.uid else { return }
-        
-        posts.removeAll()
-//        isFinishedPaging = false
-//        paginatePosts()
-        
+                
         //TODO: Replace this with pagination
         Database.database().fetchAllPosts(withUID: uid, completion: { (posts) in
+            self.posts.removeAll()
             self.posts = posts
             self.posts.sort(by: { (p1, p2) -> Bool in
                 return p1.creationDate.compare(p2.creationDate) == .orderedDescending
@@ -112,55 +121,6 @@ class UserProfileController: HomePostCellViewController {
         
         header?.reloadData()
     }
-    
-//    private func paginatePosts() {
-//        guard let uid = self.user?.uid else { return }
-//
-//        var query = Database.database().reference().child("posts").child(uid).queryOrdered(byChild: "creationDate")
-//
-//        if posts.count > 0 {
-//            let value = posts.last?.creationDate.timeIntervalSince1970
-//            query = query.queryEnding(atValue: value)
-//        }
-//
-//        query.queryLimited(toLast: UInt(pagingCount)).observeSingleEvent(of: .value, with: { (snapshot) in
-//            guard var allObjects = snapshot.children.allObjects as? [DataSnapshot] else {
-//                self.collectionView?.refreshControl?.endRefreshing()
-//                return
-//            }
-//
-//            allObjects.reverse()
-//
-//            if allObjects.count < self.pagingCount {
-//                self.isFinishedPaging = true
-//            } else {
-//                self.isFinishedPaging = false
-//            }
-//
-//            if self.posts.count > 0 && allObjects.count > 0 {
-//                allObjects.removeFirst()
-//            }
-//
-//            if allObjects.count == 0 {
-//                self.collectionView?.refreshControl?.endRefreshing()
-//            }
-//
-//            allObjects.forEach({ (snapshot) in
-//                let postId = snapshot.key
-//
-//                Database.database().fetchPost(withUID: uid, postId: postId, completion: { (post) in
-//                    self.posts.append(post)
-//                    self.collectionView?.reloadData()
-//                    self.collectionView?.refreshControl?.endRefreshing()
-//
-//                }, withCancel: { (err) in
-//                    self.collectionView?.refreshControl?.endRefreshing()
-//                })
-//            })
-//        }) { (err) in
-//            print("Failed to paginate posts:", err)
-//        }
-//    }
     
     override func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
         if posts.count == 0 {
@@ -223,14 +183,15 @@ extension UserProfileController: UICollectionViewDelegateFlowLayout {
             return CGSize(width: width, height: width)
         } else {
             let dummyCell = HomePostCell(frame: CGRect(x: 0, y: 0, width: view.frame.width, height: 1000))
-            dummyCell.post = posts[indexPath.item]
+            let post = posts[indexPath.item]
+            dummyCell.post = post
             dummyCell.layoutIfNeeded()
             
             var height: CGFloat = dummyCell.header.bounds.height
             height += view.frame.width
             height += 24 + 2 * dummyCell.padding //bookmark button + padding
             height += dummyCell.captionLabel.intrinsicContentSize.height + 8
-            
+            height += post.likes > 0 ? 10 : 0
             //TODO: unsure why this is needed
             height += 8
             
@@ -256,5 +217,73 @@ extension UserProfileController: UserProfileHeaderDelegate {
         isGridView = false
         collectionView?.reloadData()
     }
+    
+    func handleChangeAvatar() {
+        let actionsheet = UIAlertController(title: "Pick source type", message: nil, preferredStyle: .actionSheet)
+        
+        if UIImagePickerController.isSourceTypeAvailable(.camera) {
+            let cameraAction = UIAlertAction(title: "Camera", style: .default) { (_) in
+                let vc = UIImagePickerController()
+                vc.sourceType = .camera
+                vc.allowsEditing = true
+                vc.delegate = self
+                self.present(vc, animated: true)
+            }
+            actionsheet.addAction(cameraAction)
+
+        }
+        
+        if UIImagePickerController.isSourceTypeAvailable(.photoLibrary) {
+            let photoAction = UIAlertAction(title: "Photo Library", style: .default) { (_) in
+                let vc = UIImagePickerController()
+                vc.sourceType = .photoLibrary
+                vc.allowsEditing = true
+                vc.delegate = self
+                self.present(vc, animated: true)
+            }
+            actionsheet.addAction(photoAction)
+        }
+        
+        let cancelAction = UIAlertAction(title: "Cancel", style: .cancel) { (_) in
+            
+        }
+        
+        actionsheet.addAction(cancelAction)
+        
+        present(actionsheet, animated: true) {
+            
+        }
+        
+    }
+}
+
+extension UserProfileController: UIImagePickerControllerDelegate & UINavigationControllerDelegate {
+    
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+        picker.dismiss(animated: true, completion: nil)
+    }
+    
+    func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+        defer {
+            picker.dismiss(animated: true, completion: nil)
+        }
+        
+        guard let image = info[.editedImage] as? UIImage else {
+            return
+        }
+        guard let uid = user?.uid,
+            let username = user?.username else {
+                return
+        }
+
+        header?.profileImageView.image = image
+        finishUpdatingUserProfile = false
+        Storage.storage().uploadUserProfileImage(image: image, completion: { (profileImageUrl) in
+            Auth.auth().uploadUser(withUID: uid, username: username, profileImageUrl: profileImageUrl) {
+                self.finishUpdatingUserProfile = true
+            }
+        })
+    }
+    
 }
 

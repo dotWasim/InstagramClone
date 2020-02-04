@@ -10,6 +10,7 @@ import UIKit
 
 protocol CommentCellDelegate {
     func didTapUser(user: User)
+    func didTapOptions(comment: Comment)
 }
 
 class CommentCell: UICollectionViewCell {
@@ -41,6 +42,14 @@ class CommentCell: UICollectionViewCell {
         return iv
     }()
     
+    private let optionsButton: UIButton = {
+        let button = UIButton(type: .system)
+        button.setTitle("•••", for: .normal)
+        button.setTitleColor(.black, for: .normal)
+        button.titleLabel?.font = UIFont.systemFont(ofSize: 12)
+        return button
+    }()
+    
     static var cellId = "commentCellId"
     
     override init(frame: CGRect) {
@@ -60,8 +69,13 @@ class CommentCell: UICollectionViewCell {
         profileImageView.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTap)))
         
         addSubview(textView)
-        textView.anchor(top: topAnchor, left: profileImageView.rightAnchor, bottom: bottomAnchor, right: rightAnchor, paddingTop: 4, paddingLeft: 4, paddingBottom: 04, paddingRight: 4)
+        textView.anchor(top: topAnchor, left: profileImageView.rightAnchor, bottom: bottomAnchor, paddingTop: 4, paddingLeft: 4, paddingBottom: 4)
         
+        addSubview(optionsButton)
+        optionsButton.anchor(top: textView.topAnchor, left: textView.rightAnchor, right: rightAnchor, paddingTop: 8, paddingLeft: 4, paddingRight: 4, width: 44)
+        optionsButton.addTarget(self, action: #selector(handleOptionsTap), for: .touchUpInside)
+
+
         let separatorView = UIView()
         separatorView.backgroundColor = UIColor(white: 0, alpha: 0.2)
         addSubview(separatorView)
@@ -79,7 +93,7 @@ class CommentCell: UICollectionViewCell {
         attributedText.append(NSAttributedString(string: timeAgoDisplay, attributes: [NSAttributedString.Key.font: UIFont.systemFont(ofSize: 14), NSAttributedString.Key.foregroundColor: UIColor.gray]))
         
         textView.attributedText = attributedText
-        
+                
         if let profileImageUrl = comment.user.profileImageUrl {
             profileImageView.loadImage(urlString: profileImageUrl)
         } else {
@@ -91,4 +105,11 @@ class CommentCell: UICollectionViewCell {
         guard let user = comment?.user else { return }
         delegate?.didTapUser(user: user)
     }
+    
+    @objc private func handleOptionsTap() {
+        guard let comment = comment else { return }
+        delegate?.didTapOptions(comment: comment)
+    }
+    
+    
 }

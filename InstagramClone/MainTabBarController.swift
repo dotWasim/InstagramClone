@@ -27,10 +27,7 @@ class MainTabBarController: UITabBarController {
     func setupViewControllers() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         let homeNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "home_unselected"), selectedImage: #imageLiteral(resourceName: "home_selected"), rootViewController: HomeController(collectionViewLayout: UICollectionViewFlowLayout()))
-        let searchNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "search_unselected"), selectedImage: #imageLiteral(resourceName: "search_selected"), rootViewController: UserSearchController(collectionViewLayout: UICollectionViewFlowLayout()))
         let plusNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "plus_unselected"), selectedImage: #imageLiteral(resourceName: "plus_unselected"))
-        let likeNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "like_unselected"), selectedImage: #imageLiteral(resourceName: "like_selected").withRenderingMode(.alwaysTemplate))
-
         let userProfileController = UserProfileController(collectionViewLayout: UICollectionViewFlowLayout())
         let userProfileNavController = self.templateNavController(unselectedImage: #imageLiteral(resourceName: "profile_unselected"), selectedImage: #imageLiteral(resourceName: "profile_selected"), rootViewController: userProfileController)
         
@@ -38,13 +35,14 @@ class MainTabBarController: UITabBarController {
             userProfileController.user = user
         }
         
-        viewControllers = [homeNavController, searchNavController, plusNavController, likeNavController, userProfileNavController]
+        viewControllers = [homeNavController, plusNavController ,userProfileNavController]
     }
     
     private func presentLoginController() {
         DispatchQueue.main.async { // wait until MainTabBarController is inside UI
             let loginController = LoginController()
             let navController = UINavigationController(rootViewController: loginController)
+            navController.modalPresentationStyle = .fullScreen
             self.present(navController, animated: true, completion: nil)
         }
     }
@@ -65,7 +63,7 @@ class MainTabBarController: UITabBarController {
 extension MainTabBarController: UITabBarControllerDelegate {
     func tabBarController(_ tabBarController: UITabBarController, shouldSelect viewController: UIViewController) -> Bool {
         let index = viewControllers?.index(of: viewController)
-        if index == 2 {
+        if index == 1 {
             let layout = UICollectionViewFlowLayout()
             let photoSelectorController = PhotoSelectorController(collectionViewLayout: layout)
             let nacController = UINavigationController(rootViewController: photoSelectorController)

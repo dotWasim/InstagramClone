@@ -13,8 +13,7 @@ class LoginController: UIViewController {
     
     private let logoContainerView: UIView = {
         let container = UIView()
-        container.backgroundColor = UIColor.rgb(red: 0, green: 120, blue: 175)
-        let logoImageView = UIImageView(image: #imageLiteral(resourceName: "Instagram_logo_white"))
+        let logoImageView = UIImageView(image: #imageLiteral(resourceName: "logo"))
         logoImageView.contentMode = .scaleAspectFill
         container.addSubview(logoImageView)
         logoImageView.anchor(width: 200, height: 50)
@@ -80,7 +79,7 @@ class LoginController: UIViewController {
         view.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(handleTapOnView)))
         
         view.addSubview(logoContainerView)
-        logoContainerView.anchor(top: view.topAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, height: 130 + UIApplication.shared.statusBarFrame.height)
+        logoContainerView.anchor(top: view.safeAreaLayoutGuide.topAnchor, left: view.safeAreaLayoutGuide.leftAnchor, right: view.safeAreaLayoutGuide.rightAnchor, height: 130 + UIApplication.shared.statusBarFrame.height)
         
         view.addSubview(dontHaveAccountButton)
         dontHaveAccountButton.anchor(left: view.safeAreaLayoutGuide.leftAnchor, bottom: view.safeAreaLayoutGuide.bottomAnchor, right: view.safeAreaLayoutGuide.rightAnchor, height: 50)

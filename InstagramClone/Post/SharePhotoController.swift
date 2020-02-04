@@ -63,16 +63,22 @@ class SharePhotoController: UIViewController {
         navigationItem.rightBarButtonItem?.isEnabled = false
         textView.isUserInteractionEnabled = false
         
+        let activityIndicator = UIActivityIndicatorView(style: .gray)
+        activityIndicator.center = view.center
+        view.addSubview(activityIndicator)
+        activityIndicator.startAnimating()
+
         
         Database.database().createPost(withImage: postImage, caption: caption) { (err) in
+            activityIndicator.stopAnimating()
+            activityIndicator.removeFromSuperview()
+            
             if err != nil {
                 self.navigationItem.rightBarButtonItem?.isEnabled = true
                 self.textView.isUserInteractionEnabled = true
                 return
             }
             
-            NotificationCenter.default.post(name: NSNotification.Name.updateHomeFeed, object: nil)
-            NotificationCenter.default.post(name: NSNotification.Name.updateUserProfileFeed, object: nil)
             self.dismiss(animated: true, completion: nil)
         }
     }

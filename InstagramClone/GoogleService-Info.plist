@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>973846303190-4lq0a56dogj10lk0hapbb5jpclfaglqm.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.973846303190-4lq0a56dogj10lk0hapbb5jpclfaglqm</string>
+	<key>API_KEY</key>
+	<string>AIzaSyDIp02-SbCw72GZnnZuK_LKqy0n17ixAHo</string>
+	<key>GCM_SENDER_ID</key>
+	<string>973846303190</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.giggle.pets</string>
+	<key>PROJECT_ID</key>
+	<string>gigglepets-3c910</string>
+	<key>STORAGE_BUCKET</key>
+	<string>gigglepets-3c910.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:973846303190:ios:3f8cb9e50a382393079477</string>
+	<key>DATABASE_URL</key>
+	<string>https://gigglepets-3c910.firebaseio.com</string>
+</dict>
+</plist>

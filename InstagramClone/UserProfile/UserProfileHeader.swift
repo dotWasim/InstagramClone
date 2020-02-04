@@ -14,6 +14,7 @@ import Firebase
 protocol UserProfileHeaderDelegate {
     func didChangeToListView()
     func didChangeToGridView()
+    func handleChangeAvatar()
 }
 
 //MARK: - UserProfileHeader
@@ -28,7 +29,7 @@ class UserProfileHeader: UICollectionViewCell {
         }
     }
     
-    private let profileImageView: CustomImageView = {
+    let profileImageView: CustomImageView = {
         let iv = CustomImageView()
         iv.clipsToBounds = true
         iv.contentMode = .scaleAspectFill
@@ -37,11 +38,7 @@ class UserProfileHeader: UICollectionViewCell {
         iv.layer.borderWidth = 0.5
         return iv
     }()
-    
-    private let postsLabel = UserProfileStatsLabel(value: 0, title: "posts")
-    private let followersLabel = UserProfileStatsLabel(value: 0, title: "followers")
-    private let followingLabel = UserProfileStatsLabel(value: 0, title: "following")
-    
+        
     private lazy var followButton: UserProfileFollowButton = {
         let button = UserProfileFollowButton(type: .system)
         button.titleLabel?.font = UIFont.boldSystemFont(ofSize: 14)
@@ -61,13 +58,6 @@ class UserProfileHeader: UICollectionViewCell {
         button.setImage(#imageLiteral(resourceName: "list"), for: .normal)
         button.tintColor = UIColor(white: 0, alpha: 0.2)
         button.addTarget(self, action: #selector(handleChangeToListView), for: .touchUpInside)
-        return button
-    }()
-    
-    private let bookmarkButton: UIButton = {
-        let button = UIButton(type: .system)
-        button.setImage(#imageLiteral(resourceName: "ribbon"), for: .normal)
-        button.tintColor = UIColor(white: 0, alpha: 0.2)
         return button
     }()
     
@@ -99,21 +89,12 @@ class UserProfileHeader: UICollectionViewCell {
         layoutBottomToolbar()
         
         addSubview(usernameLabel)
-        usernameLabel.anchor(top: profileImageView.bottomAnchor, left: leftAnchor, bottom: gridButton.topAnchor, right: rightAnchor, paddingTop: 4, paddingLeft: padding, paddingRight: padding)
-        
-        layoutUserStatsView()
-        
+        usernameLabel.anchor(top: topAnchor, left: profileImageView.rightAnchor, right: rightAnchor, paddingTop: padding, paddingLeft: padding, paddingRight: padding, height: 50)
+
         addSubview(followButton)
-        followButton.anchor(top: postsLabel.bottomAnchor, left: postsLabel.leftAnchor, right: followingLabel.rightAnchor, paddingTop: 2, height: 34)
+        followButton.anchor(top: usernameLabel.bottomAnchor, left: usernameLabel.leftAnchor, right: usernameLabel.rightAnchor, paddingTop: 2, height: 34)
     }
-    
-    private func layoutUserStatsView() {
-        let stackView = UIStackView(arrangedSubviews: [postsLabel, followersLabel, followingLabel])
-        stackView.distribution = .fillEqually
-        addSubview(stackView)
-        stackView.anchor(top: topAnchor, left: profileImageView.rightAnchor, right: rightAnchor, paddingTop: padding, paddingLeft: padding, paddingRight: padding, height: 50)
-    }
-    
+        
     private func layoutBottomToolbar() {
         let topDividerView = UIView()
         topDividerView.backgroundColor = UIColor(white: 0, alpha: 0.2)
@@ -121,7 +102,7 @@ class UserProfileHeader: UICollectionViewCell {
         let bottomDividerView = UIView()
         bottomDividerView.backgroundColor = UIColor(white: 0, alpha: 0.2)
         
-        let stackView = UIStackView(arrangedSubviews: [gridButton, listButton, bookmarkButton])
+        let stackView = UIStackView(arrangedSubviews: [gridButton, listButton])
         stackView.distribution = .fillEqually
         
         addSubview(stackView)
@@ -135,9 +116,8 @@ class UserProfileHeader: UICollectionViewCell {
     
     func reloadData() {
         guard let user = user else { return }
-        usernameLabel.text = user.username
+        usernameLabel.text = user.username.capitalized
         reloadFollowButton()
-        reloadUserStats()
         if let profileImageUrl = user.profileImageUrl {
             profileImageView.loadImage(urlString: profileImageUrl)
         }
@@ -149,68 +129,15 @@ class UserProfileHeader: UICollectionViewCell {
         
         if currentLoggedInUserId == userId {
             followButton.type = .edit
-            return
-        }
-        
-        let previousButtonType = followButton.type
-        followButton.type = .loading
-        
-        Database.database().isFollowingUser(withUID: userId, completion: { (following) in
-            if following {
-                self.followButton.type = .unfollow
-            } else {
-                self.followButton.type = .follow
-            }
-        }) { (err) in
-            self.followButton.type = previousButtonType
-        }
-    }
-    
-    private func reloadUserStats() {
-        guard let uid = user?.uid else { return }
-        
-        Database.database().numberOfPostsForUser(withUID: uid) { (count) in
-            self.postsLabel.setValue(count)
-        }
-        
-        Database.database().numberOfFollowersForUser(withUID: uid) { (count) in
-            self.followersLabel.setValue(count)
-        }
-        
-        Database.database().numberOfFollowingForUser(withUID: uid) { (count) in
-            self.followingLabel.setValue(count)
+        } else {
+            followButton.removeFromSuperview()
         }
     }
     
     @objc private func handleTap() {
         guard let userId = user?.uid else { return }
-        if followButton.type == .edit { return }
-        
-        let previousButtonType = followButton.type
-        followButton.type = .loading
-        
-        if previousButtonType == .follow {
-            Database.database().followUser(withUID: userId) { (err) in
-                if err != nil {
-                    self.followButton.type = previousButtonType
-                    return
-                }
-                self.reloadFollowButton()
-                self.reloadUserStats()
-            }
-            
-        } else if previousButtonType == .unfollow {
-            Database.database().unfollowUser(withUID: userId) { (err) in
-                if err != nil {
-                    self.followButton.type = previousButtonType
-                    return
-                }
-                self.reloadFollowButton()
-                self.reloadUserStats()
-            }
-        }
-        
-        NotificationCenter.default.post(name: NSNotification.Name.updateHomeFeed, object: nil)
+        guard followButton.type == .edit else { return }
+        delegate?.handleChangeAvatar()
     }
     
     @objc private func handleChangeToGridView() {
@@ -323,7 +250,7 @@ private class UserProfileFollowButton: UIButton {
     }
     
     private func setupEditStyle() {
-        setTitle("Edit Profile", for: .normal)
+        setTitle("Change Avatar", for: .normal)
         setTitleColor(.black, for: .normal)
         backgroundColor = .white
         isUserInteractionEnabled = true

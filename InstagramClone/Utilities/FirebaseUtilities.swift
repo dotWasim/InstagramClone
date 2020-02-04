@@ -32,7 +32,7 @@ extension Auth {
         })
     }
     
-    private func uploadUser(withUID uid: String, username: String, profileImageUrl: String? = nil, completion: @escaping (() -> ())) {
+    func uploadUser(withUID uid: String, username: String, profileImageUrl: String? = nil, completion: @escaping (() -> ())) {
         var dictionaryValues = ["username": username]
         if profileImageUrl != nil {
             dictionaryValues["profileImageUrl"] = profileImageUrl
@@ -51,7 +51,7 @@ extension Auth {
 
 extension Storage {
     
-    fileprivate func uploadUserProfileImage(image: UIImage, completion: @escaping (String) -> ()) {
+    func uploadUserProfileImage(image: UIImage, completion: @escaping (String) -> ()) {
         guard let uploadData = image.jpegData(compressionQuality: 1) else { return } //changed from 0.3
         
         let storageRef = Storage.storage().reference().child("profile_images").child(NSUUID().uuidString)
@@ -280,6 +280,16 @@ extension Database {
         }
     }
     
+    func deleteComment(postId: String, commentId: String, completion: ((Error?) -> ())? = nil) {
+        Database.database().reference().child("comments").child(postId).child(commentId).removeValue { (err, _) in
+            if let err = err {
+                print("Failed to delete comment:", err)
+                return
+            }
+            completion?(err)
+        }
+    }
+    
     func deletePost(withUID uid: String, postId: String, completion: ((Error?) -> ())? = nil) {
         Database.database().reference().child("posts").child(uid).child(postId).removeValue { (err, _) in
             if let err = err {
@@ -317,11 +327,11 @@ extension Database {
     }
     
     func addCommentToPost(withId postId: String, text: String, completion: @escaping (Error?) -> ()) {
-        guard let uid = Auth.auth().currentUser?.uid else { return }
+        guard let userUID = Auth.auth().currentUser?.uid else { return }
+        let id = UUID().uuidString
+        let values = ["text": text, "creationDate": Date().timeIntervalSince1970, "uid": id, "userUID": userUID] as [String: Any]
         
-        let values = ["text": text, "creationDate": Date().timeIntervalSince1970, "uid": uid] as [String: Any]
-        
-        let commentsRef = Database.database().reference().child("comments").child(postId).childByAutoId()
+        let commentsRef = Database.database().reference().child("comments").child(postId).child(id)
         commentsRef.updateChildValues(values) { (err, _) in
             if let err = err {
                 print("Failed to add comment:", err)
@@ -345,7 +355,7 @@ extension Database {
             
             dictionaries.forEach({ (key, value) in
                 guard let commentDictionary = value as? [String: Any] else { return }
-                guard let uid = commentDictionary["uid"] as? String else { return }
+                guard let uid = commentDictionary["userUID"] as? String else { return }
                 
                 Database.database().fetchUser(withUID: uid) { (user) in
                     let comment = Comment(user: user, dictionary: commentDictionary)
