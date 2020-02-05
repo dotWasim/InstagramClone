@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import Firebase
 
 struct User {
     
@@ -18,5 +19,11 @@ struct User {
         self.uid = uid
         self.username = dictionary["username"] as? String ?? ""
         self.profileImageUrl = dictionary["profileImageUrl"] as? String ?? nil
+    }
+    
+    init(_ user:  FirebaseAuth.User) {
+        uid = user.uid
+        username = user.displayName ?? "unknown"
+        profileImageUrl = user.photoURL?.absoluteString
     }
 }

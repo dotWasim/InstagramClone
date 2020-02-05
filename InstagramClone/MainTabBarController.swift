@@ -8,6 +8,7 @@
 
 import UIKit
 import Firebase
+import FirebaseUI
 
 class MainTabBarController: UITabBarController {
     
@@ -16,6 +17,10 @@ class MainTabBarController: UITabBarController {
         tabBar.tintColor = .black
         tabBar.isTranslucent = false
         delegate = self
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        super.viewDidAppear(animated)
         
         if Auth.auth().currentUser == nil {
             presentLoginController()
@@ -37,14 +42,56 @@ class MainTabBarController: UITabBarController {
         
         viewControllers = [homeNavController, plusNavController ,userProfileNavController]
     }
-    
+
+    var authUI: FUIAuth?
+
     private func presentLoginController() {
-        DispatchQueue.main.async { // wait until MainTabBarController is inside UI
-            let loginController = LoginController()
-            let navController = UINavigationController(rootViewController: loginController)
-            navController.modalPresentationStyle = .fullScreen
-            self.present(navController, animated: true, completion: nil)
+        self.authUI = FUIAuth.defaultAuthUI()
+        // You need to adopt a FUIAuthDelegate protocol to receive callback
+        self.authUI?.delegate = self
+        self.authUI?.shouldHideCancelButton = true
+        
+        // privacy
+        let kFirebaseTermsOfService = URL(string: "https://gigglepets.net/privacy/")!
+        authUI?.tosurl = kFirebaseTermsOfService
+        
+        var providers: [FUIAuthProvider] = [
+            FUIEmailAuth(),
+            FUIGoogleAuth(),
+            FUIFacebookAuth()
+        ]
+        
+        if #available(iOS 13.0, *) {
+            let appleProvider = FUIOAuth.appleAuthProvider()
+            
+            providers.append(appleProvider)
         }
+        
+        self.authUI?.providers = providers
+        
+        let loginController = self.authUI!.authViewController() //LoginController()
+        //let navController = UINavigationController(rootViewController: loginController)
+        loginController.modalPresentationStyle = .fullScreen
+        let imgView = UIImageView(image: #imageLiteral(resourceName: "logo.png") )
+        imgView.contentMode = .scaleAspectFit
+        imgView.frame = CGRect(x: 0, y: view.safeAreaInsets.top, width: loginController.view.safeAreaLayoutGuide.layoutFrame.width, height: 200)
+        loginController.view.backgroundColor = .white
+        
+        for child in loginController.children {
+            for subview in child.view.subviews{
+                subview.backgroundColor = .white
+                if let scrollView = subview as? UIScrollView {
+                    let viewFrame = scrollView.bounds.height
+                    imgView.frame = CGRect(x: 0, y: viewFrame/3 - 100, width: loginController.view.safeAreaLayoutGuide.layoutFrame.width, height: 200)
+
+                    scrollView.subviews.forEach({ $0.backgroundColor = .white })
+                    scrollView.addSubview(imgView)
+                }
+            }
+        }
+
+//        loginController.children.first?.view.addSubview(imgView)
+        self.present(loginController, animated: true, completion: nil)
     }
     
     private func templateNavController(unselectedImage: UIImage, selectedImage: UIImage, rootViewController: UIViewController = UIViewController()) -> UINavigationController {
@@ -74,3 +121,11 @@ extension MainTabBarController: UITabBarControllerDelegate {
     }
 }
 
+
+
+extension MainTabBarController: FUIAuthDelegate {
+    func authUI(_ authUI: FUIAuth, didSignInWith authDataResult: AuthDataResult?, error: Error?) {
+        print(authDataResult?.user)
+        
+    }
+}

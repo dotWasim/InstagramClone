@@ -101,7 +101,13 @@ extension Database {
     
     func fetchUser(withUID uid: String, completion: @escaping (User) -> ()) {
         Database.database().reference().child("users").child(uid).observeSingleEvent(of: .value, with: { (snapshot) in
-            guard let userDictionary = snapshot.value as? [String: Any] else { return }
+            guard let userDictionary = snapshot.value as? [String: Any] else {
+                if let socialUser = Auth.auth().currentUser {
+                    let user = User(socialUser)
+                    completion(user)
+                }
+                return
+            }
             let user = User(uid: uid, dictionary: userDictionary)
             completion(user)
         }) { (err) in

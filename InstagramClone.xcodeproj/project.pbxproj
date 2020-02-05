@@ -55,6 +55,7 @@
 		9A000D9623E809D500367108 /* ProfilePostCellViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfilePostCellViewController.swift; sourceTree = "<group>"; };
 		9A000D9823E812B100367108 /* NewHomePostCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NewHomePostCell.swift; sourceTree = "<group>"; };
 		9A000D9F23E9587300367108 /* HomePostDetailsController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomePostDetailsController.swift; sourceTree = "<group>"; };
+		9A000DA123E9AB4600367108 /* GigglePets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = GigglePets.entitlements; sourceTree = "<group>"; };
 		AD1F3157211B98D100262BF1 /* HomePostCellHeader.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomePostCellHeader.swift; sourceTree = "<group>"; };
 		AD215F15205DA9B6000E42AD /* Extensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Extensions.swift; sourceTree = "<group>"; };
 		AD2A2CAD205C88DE0023D5C8 /* GigglePets.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GigglePets.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -179,6 +180,7 @@
 		AD2A2CAF205C88DE0023D5C8 /* InstagramClone */ = {
 			isa = PBXGroup;
 			children = (
+				9A000DA123E9AB4600367108 /* GigglePets.entitlements */,
 				AD2A2CB0205C88DE0023D5C8 /* AppDelegate.swift */,
 				AD4D8CEB2060634600A49BA4 /* MainTabBarController.swift */,
 				AD4D8CF22060A70000A49BA4 /* Login */,
@@ -620,14 +622,15 @@
 			baseConfigurationReference = E9B269287FF796F4A8BA3F80 /* Pods-InstagramClone.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = InstagramClone/GigglePets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = DYZ8Y2U8DB;
+				DEVELOPMENT_TEAM = YB88NWK7JY;
 				INFOPLIST_FILE = InstagramClone/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.giggle.pets;
 				PRODUCT_NAME = GigglePets;
 				SWIFT_VERSION = 4.2;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -636,14 +639,15 @@
 			baseConfigurationReference = 09578B8F3D737CD5AC684ECA /* Pods-InstagramClone.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = InstagramClone/GigglePets.entitlements;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_TEAM = DYZ8Y2U8DB;
+				DEVELOPMENT_TEAM = YB88NWK7JY;
 				INFOPLIST_FILE = InstagramClone/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
 				PRODUCT_BUNDLE_IDENTIFIER = com.giggle.pets;
 				PRODUCT_NAME = GigglePets;
 				SWIFT_VERSION = 4.2;
-				TARGETED_DEVICE_FAMILY = "1,2";
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};

@@ -45,6 +45,7 @@ class UserProfileController: ProfilePostCellViewController {
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
         navigationItem.backBarButtonItem = UIBarButtonItem(title: "", style: .plain, target: nil, action: nil)
         navigationItem.backBarButtonItem?.tintColor = .black
         
@@ -70,10 +71,11 @@ class UserProfileController: ProfilePostCellViewController {
         let logOutAction = UIAlertAction(title: "Log Out", style: .default) { (_) in
             do {
                 try Auth.auth().signOut()
-                let loginController = LoginController()
-                let navController = UINavigationController(rootViewController: loginController)
-                navController.modalPresentationStyle = .fullScreen
-                self.present(navController, animated: true, completion: nil)
+                (UIApplication.shared.delegate as! AppDelegate).setupMainView()
+//                let loginController = LoginController()
+//                let navController = UINavigationController(rootViewController: loginController)
+//                navController.modalPresentationStyle = .fullScreen
+//                self.present(navController, animated: true, completion: nil)
             } catch let err {
                 print("Failed to sign out:", err)
             }
