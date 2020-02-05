@@ -260,6 +260,23 @@ extension Database {
         })
     }
     
+    
+    
+    func fetchHomePostsLikes(completion: @escaping ([String: Any]) -> ()) {
+        let ref = Database.database().reference().child("home_likes")
+        
+        ref.observeSingleEvent(of: .value, with: { (snapshot) in
+            guard let dictionaries = snapshot.value as? [String: Any] else {
+                completion([:])
+                return
+            }
+            completion(dictionaries)
+        }) { (err) in
+            print("Failed to fetch posts:", err)
+            completion([:])
+        }
+    }
+    
     func fetchAllPosts(withUID uid: String, completion: @escaping ([Post]) -> (), withCancel cancel: ((Error) -> ())?) {
         let ref = Database.database().reference().child("posts").child(uid)
         

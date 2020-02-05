@@ -11,6 +11,6 @@ target 'InstagramClone' do
   pod 'Firebase/Storage'
   pod 'Firebase/Core'
 pod 'FirebaseUI'
-
+pod 'Kingfisher'
 
 end

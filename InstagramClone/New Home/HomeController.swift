@@ -13,7 +13,7 @@ class HomeController: HomePostCellViewController {
    
     private var currentPageNumber = 1
     private var isLoadingData = false
-    
+    var likesData: [String: Any] = [:]
     override func viewDidLoad() {
         super.viewDidLoad()
         configureNavigationBar()
@@ -45,6 +45,12 @@ class HomeController: HomePostCellViewController {
         getData()
     }
     
+    let dispatchQueue = DispatchQueue(label: "com.app.pets.serial")
+    var data: Data?
+    var response: URLResponse?
+    var error :Error?
+    
+    let dispatchGroup = DispatchGroup()
     func getData(){
         guard !isLoadingData else { return }
         isLoadingData = true
@@ -55,16 +61,34 @@ class HomeController: HomePostCellViewController {
         let urlString = "https://gigglepets.net/wp-json/wp/v2/posts?page=\(currentPageNumber)&per_page=20&_fields=id,excerpt.rendered,title.rendered,link,featured_image_src,featured_media,content,date"
         
         var request = URLRequest.init(url: URL(string: urlString)!)
-        request.allHTTPHeaderFields = ["Authorization" : "Bearer DkuIGd5zUPuIjsy8bV7hOOOEqg91F5BC"]
+       // request.allHTTPHeaderFields = ["Authorization" : "Bearer DkuIGd5zUPuIjsy8bV7hOOOEqg91F5BC"]
         
-        URLSession.shared.dataTask(with: request) { (data, response, error) in
-            DispatchQueue.main.async {
-                if self.collectionView.refreshControl?.isRefreshing ?? false {
-                    self.collectionView.refreshControl?.endRefreshing()
-                }
+        dispatchGroup.enter()
+        dispatchQueue.async {
+            Database.database().fetchHomePostsLikes { (data) in
+                self.likesData = data
+                self.dispatchGroup.leave()
             }
+        }
+        
+        dispatchGroup.enter()
+        dispatchQueue.async {
+            URLSession.shared.dataTask(with: request) { (data, response, error) in
+                self.data = data
+                self.response = response
+                self.error = error
+                self.dispatchGroup.leave()
+            }.resume()
+        }
+        
+        dispatchGroup.notify(queue: .main) {
+            
+            if self.collectionView.refreshControl?.isRefreshing ?? false {
+                self.collectionView.refreshControl?.endRefreshing()
+            }
+            
 
-            if let _ = error {
+            if let _ = self.error {
                 if self.currentPageNumber == 1 {
                     self.showEmptyStateViewIfNeeded()
                 }
@@ -74,10 +98,8 @@ class HomeController: HomePostCellViewController {
                 return
             }
             
-            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else{
-                DispatchQueue.main.async {
-                    self.collectionView.reloadData()
-                }
+            guard let httpResponse = self.response as? HTTPURLResponse, httpResponse.statusCode == 200 else{
+                self.collectionView.reloadData()
                 return
             }
             
@@ -87,22 +109,34 @@ class HomeController: HomePostCellViewController {
                     self.posts = []
                 }
 
-                let parsedData = try JSONSerialization.jsonObject(with: data!) as! [[String : Any]]
+                let parsedData = try JSONSerialization.jsonObject(with: self.data!) as! [[String : Any]]
                 let mappedPosts = parsedData.map{ HomePost($0)}
                 
                 self.posts.append(contentsOf: mappedPosts)
-                DispatchQueue.main.async {
-                    self.collectionView.reloadData()
+                self.posts.enumerated().forEach { (index, post) in
+                    let likes = self.likesData[post.id] as? [String: Any]
+                    self.posts[index].likes = likes?.count ?? 0
+                    if let userId = self.userId {
+                        self.posts[index].likedByCurrentUser = likes?.keys.contains(userId) ?? false
+                    }
                 }
+                
+                self.collectionView.reloadData()
+                
             } catch {
                 self.currentPageNumber -= 1
             }
             self.isLoadingData = false
-            DispatchQueue.main.async {
-                self.showEmptyStateViewIfNeeded()
-            }
-        }.resume()
+            self.showEmptyStateViewIfNeeded()
+        }
         
+        
+    }
+    
+    func fetchLikes(){
+        Database.database().fetchHomePostsLikes { (data) in
+            self.likesData = data
+        }
     }
     
     override func showEmptyStateViewIfNeeded() {
@@ -138,10 +172,13 @@ class HomeController: HomePostCellViewController {
         }
     }
     
+    lazy var userId = Auth.auth().currentUser?.uid
+    
     override func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: NewHomePostCell.cellId, for: indexPath) as! NewHomePostCell
         if indexPath.item < posts.count {
-            cell.post = posts[indexPath.item]
+            let post = posts[indexPath.item]
+            cell.post = post
         }
         cell.delegate = self
         return cell

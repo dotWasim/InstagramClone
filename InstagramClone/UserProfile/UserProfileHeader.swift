@@ -118,8 +118,9 @@ class UserProfileHeader: UICollectionViewCell {
         guard let user = user else { return }
         usernameLabel.text = user.username.capitalized
         reloadFollowButton()
-        if let profileImageUrl = user.profileImageUrl {
-            profileImageView.loadImage(urlString: profileImageUrl)
+        if let profileImageUrl = user.profileImageUrl,
+            let url = URL(string: profileImageUrl){
+            profileImageView.kf.setImage(with: url)
         }
     }
     

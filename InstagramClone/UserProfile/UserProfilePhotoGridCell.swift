@@ -13,7 +13,9 @@ class UserProfilePhotoGridCell: UICollectionViewCell {
     var post: Post? {
         didSet {
             guard let imageUrl = post?.imageUrl else { return }
-            photoImageView.loadImage(urlString: imageUrl)
+            if let url = URL(string: imageUrl) {
+                photoImageView.kf.setImage(with: url)
+            }
         }
     }
     
@@ -35,6 +37,10 @@ class UserProfilePhotoGridCell: UICollectionViewCell {
     required init?(coder aDecoder: NSCoder) {
         super.init(coder: aDecoder)
         sharedInit()
+    }
+    
+    override func prepareForReuse() {
+        photoImageView.kf.cancelDownloadTask()
     }
     
     private func sharedInit() {

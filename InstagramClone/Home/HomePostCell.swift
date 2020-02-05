@@ -7,6 +7,7 @@
 //
 
 import UIKit
+import Kingfisher
 
 protocol HomePostCellDelegate {
     func didTapComment(post: Post)
@@ -112,16 +113,19 @@ class HomePostCell: UICollectionViewCell {
         stackView.alignment = .top
         stackView.spacing = 16
         addSubview(stackView)
-        stackView.anchor(top: photoImageView.bottomAnchor, left: leftAnchor, paddingTop: padding, paddingLeft: padding)
-        
-        addSubview(bookmarkButton)
-        bookmarkButton.anchor(top: photoImageView.bottomAnchor, right: rightAnchor, paddingTop: padding, paddingRight: padding)
+        stackView.anchor(top: photoImageView.bottomAnchor, left: leftAnchor, paddingTop: padding, paddingLeft: padding)        
+    }
+    
+    override func prepareForReuse() {
+        photoImageView.kf.cancelDownloadTask()
     }
     
     private func configurePost() {
         guard let post = post else { return }
         header.user = post.user
-        photoImageView.loadImage(urlString: post.imageUrl)
+        if let url = URL(string: post.imageUrl) {
+            photoImageView.kf.setImage(with: url)
+        }
         likeButton.setImage(post.likedByCurrentUser == true ? #imageLiteral(resourceName: "like_selected").withRenderingMode(.alwaysOriginal) : #imageLiteral(resourceName: "like_unselected").withRenderingMode(.alwaysOriginal), for: .normal)
         setLikes(to: post.likes)
         setupAttributedCaption()

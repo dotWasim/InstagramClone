@@ -10,6 +10,7 @@ import UIKit
 import Firebase
 import FirebaseUI
 
+
 class MainTabBarController: UITabBarController {
     
     override func viewDidLoad() {
@@ -43,34 +44,36 @@ class MainTabBarController: UITabBarController {
         viewControllers = [homeNavController, plusNavController ,userProfileNavController]
     }
 
-    var authUI: FUIAuth?
+    lazy var authUI: FUIAuth? = {
+       	let UIAuth = FUIAuth.defaultAuthUI()
+        UIAuth?.delegate = self
+        UIAuth?.shouldHideCancelButton = true
+        return UIAuth
+    }()
 
+    // providers
+    var providers: [FUIAuthProvider] = [
+        FUIEmailAuth(),
+        FUIGoogleAuth(),
+        FUIFacebookAuth()
+    ]
+    
     private func presentLoginController() {
-        self.authUI = FUIAuth.defaultAuthUI()
-        // You need to adopt a FUIAuthDelegate protocol to receive callback
-        self.authUI?.delegate = self
-        self.authUI?.shouldHideCancelButton = true
         
         // privacy
-        let kFirebaseTermsOfService = URL(string: "https://gigglepets.net/privacy/")!
-        authUI?.tosurl = kFirebaseTermsOfService
-        
-        var providers: [FUIAuthProvider] = [
-            FUIEmailAuth(),
-            FUIGoogleAuth(),
-            FUIFacebookAuth()
-        ]
+        let privacyPolicyURL = URL(string: "https://gigglepets.net/privacy/")!
+        authUI?.tosurl = privacyPolicyURL
+        authUI?.privacyPolicyURL = privacyPolicyURL
+
         
         if #available(iOS 13.0, *) {
             let appleProvider = FUIOAuth.appleAuthProvider()
-            
             providers.append(appleProvider)
         }
         
         self.authUI?.providers = providers
         
-        let loginController = self.authUI!.authViewController() //LoginController()
-        //let navController = UINavigationController(rootViewController: loginController)
+        let loginController = self.authUI!.authViewController()
         loginController.modalPresentationStyle = .fullScreen
         let imgView = UIImageView(image: #imageLiteral(resourceName: "logo.png") )
         imgView.contentMode = .scaleAspectFit
@@ -111,10 +114,18 @@ extension MainTabBarController: UITabBarControllerDelegate {
     func tabBarController(_ tabBarController: UITabBarController, shouldSelect viewController: UIViewController) -> Bool {
         let index = viewControllers?.index(of: viewController)
         if index == 1 {
-            let layout = UICollectionViewFlowLayout()
-            let photoSelectorController = PhotoSelectorController(collectionViewLayout: layout)
-            let nacController = UINavigationController(rootViewController: photoSelectorController)
-            present(nacController, animated: true, completion: nil)
+            
+            showImageSoureActionSheet()
+//            let picker = UIImagePickerController()
+//            picker.sourceType = .photoLibrary
+//            picker.delegate = self
+////            let nacController = UINavigationController(rootViewController: picker)
+//            present(picker, animated: true, completion: nil)
+            
+//            let layout = UICollectionViewFlowLayout()
+//            let photoSelectorController = PhotoSelectorController(collectionViewLayout: layout)
+//            let nacController = UINavigationController(rootViewController: photoSelectorController)
+//            present(nacController, animated: true, completion: nil)
             return false
         }
         return true
@@ -125,7 +136,76 @@ extension MainTabBarController: UITabBarControllerDelegate {
 
 extension MainTabBarController: FUIAuthDelegate {
     func authUI(_ authUI: FUIAuth, didSignInWith authDataResult: AuthDataResult?, error: Error?) {
-        print(authDataResult?.user)
-        
+        print(Auth.auth().currentUser?.displayName)
+        print(authDataResult?.user.uid)
     }
+    
+    func authUI(_ authUI: FUIAuth, didFinish operation: FUIAccountSettingsOperationType, error: Error?) {
+        print(authUI.auth?.currentUser?.displayName)
+    }
+}
+
+
+extension MainTabBarController: UIImagePickerControllerDelegate & UINavigationControllerDelegate {
+    func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
+           picker.dismiss(animated: true, completion: nil)
+       }
+       
+   func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+    //   defer {
+           //picker.dismiss(animated: false, completion: nil)
+      // }
+       
+       guard let image = info[.editedImage] as? UIImage else {
+           return
+       }
+        picker.dismiss(animated: false, completion: nil)
+       handleNext(selectedImage: image)
+   }
+    
+    @objc private func handleNext(selectedImage: UIImage) {
+        let sharePhotoController = SharePhotoController()
+        sharePhotoController.selectedImage = selectedImage
+        let nacController = UINavigationController(rootViewController: sharePhotoController)
+
+        present(nacController, animated: true)
+    }
+    
+    func showImageSoureActionSheet() {
+          let actionsheet = UIAlertController(title: "Pick source type", message: nil, preferredStyle: .actionSheet)
+          
+          if UIImagePickerController.isSourceTypeAvailable(.camera) {
+              let cameraAction = UIAlertAction(title: "Camera", style: .default) { (_) in
+                  let vc = UIImagePickerController()
+                  vc.sourceType = .camera
+                  vc.allowsEditing = true
+                  vc.delegate = self
+                  self.present(vc, animated: true)
+              }
+              actionsheet.addAction(cameraAction)
+
+          }
+          
+          if UIImagePickerController.isSourceTypeAvailable(.photoLibrary) {
+              let photoAction = UIAlertAction(title: "Photo Library", style: .default) { (_) in
+                  let vc = UIImagePickerController()
+                  vc.sourceType = .photoLibrary
+                  vc.allowsEditing = true
+                  vc.delegate = self
+                  self.present(vc, animated: true)
+              }
+              actionsheet.addAction(photoAction)
+          }
+          
+          let cancelAction = UIAlertAction(title: "Cancel", style: .cancel) { (_) in
+              
+          }
+          
+          actionsheet.addAction(cancelAction)
+          
+          present(actionsheet, animated: true) {
+              
+          }
+          
+      }
 }

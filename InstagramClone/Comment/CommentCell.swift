@@ -62,6 +62,10 @@ class CommentCell: UICollectionViewCell {
         sharedInit()
     }
     
+    override func prepareForReuse() {
+        profileImageView.kf.cancelDownloadTask()
+    }
+    
     private func sharedInit() {
         addSubview(profileImageView)
         profileImageView.anchor(top: topAnchor, left: leftAnchor, paddingTop: 8, paddingLeft: 8, width: 40, height: 40)
@@ -94,8 +98,9 @@ class CommentCell: UICollectionViewCell {
         
         textView.attributedText = attributedText
                 
-        if let profileImageUrl = comment.user.profileImageUrl {
-            profileImageView.loadImage(urlString: profileImageUrl)
+        if let profileImageUrl = comment.user.profileImageUrl,
+            let url = URL(string: profileImageUrl){
+            profileImageView.kf.setImage(with: url)
         } else {
             profileImageView.image = #imageLiteral(resourceName: "user")
         }

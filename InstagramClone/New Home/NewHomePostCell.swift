@@ -119,9 +119,15 @@ class NewHomePostCell: UICollectionViewCell {
         readMore.anchor(top: photoImageView.bottomAnchor, right: rightAnchor, paddingTop: padding, paddingRight: padding)
     }
     
+    override func prepareForReuse() {
+        photoImageView.kf.cancelDownloadTask()
+    }
     private func configurePost() {
         guard let post = post else { return }
-        photoImageView.loadImage(urlString: post.imageUrl)
+        if let urlString = post.imageUrl,
+            let url = URL(string: urlString){
+            photoImageView.kf.setImage(with: url)
+        }
         likeButton.setImage(post.likedByCurrentUser == true ? #imageLiteral(resourceName: "like_selected").withRenderingMode(.alwaysOriginal) : #imageLiteral(resourceName: "like_unselected").withRenderingMode(.alwaysOriginal), for: .normal)
         setLikes(to: post.likes)
         setupAttributedCaption()

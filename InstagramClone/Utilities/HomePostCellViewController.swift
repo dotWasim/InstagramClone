@@ -51,7 +51,7 @@ class HomePostCellViewController: UICollectionViewController, NewHomePostCellDel
         var post = posts[indexPath.item]
         
         if post.likedByCurrentUser {
-            Database.database().reference().child("likes").child(post.id).child(uid).removeValue { (err, _) in
+            Database.database().reference().child("home_likes").child(post.id).child(uid).removeValue { (err, _) in
                 if let err = err {
                     print("Failed to unlike post:", err)
                     return
@@ -65,7 +65,7 @@ class HomePostCellViewController: UICollectionViewController, NewHomePostCellDel
             }
         } else {
             let values = [uid : 1]
-            Database.database().reference().child("likes").child(post.id).updateChildValues(values) { (err, _) in
+            Database.database().reference().child("home_likes").child(post.id).updateChildValues(values) { (err, _) in
                 if let err = err {
                     print("Failed to like post:", err)
                     return
